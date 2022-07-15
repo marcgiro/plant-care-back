@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Session,
 } from "@nestjs/common";
 import { Serialize } from "../interceptors/serialize.interceptor";
 import { AuthService } from "./auth/auth.service";
@@ -24,13 +25,26 @@ export class UsersController {
   ) {}
 
   @Post("/signup")
-  createUser(@Body() body: CreateUserDto) {
-    return this.authService.signUp(body.name, body.email, body.password);
+  async createUser(@Body() body: CreateUserDto, @Session() session: any) {
+    const user = await this.authService.signUp(
+      body.name,
+      body.email,
+      body.password,
+    );
+    session.UserId = user.id;
+    return user;
   }
 
   @Post("/signin")
-  signIn(@Body() body: SignInUserDto) {
-    return this.authService.signIn(body.email, body.password);
+  async signIn(@Body() body: SignInUserDto, @Session() session: any) {
+    const user = await this.authService.signIn(body.email, body.password);
+    session.UserId = user.id;
+    return user;
+  }
+
+  @Get("/whoami ")
+  whoAmI(@Session() session: any) {
+    return this.usersService.findOneById(session.UserId);
   }
 
   @Get("/:id")
