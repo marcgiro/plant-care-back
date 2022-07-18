@@ -7,7 +7,9 @@ import {
   Patch,
   Post,
   Session,
+  UseGuards,
 } from "@nestjs/common";
+import { AuthGuard } from "../guards/auth.guards";
 import { Serialize } from "../interceptors/serialize.interceptor";
 import { AuthService } from "./auth/auth.service";
 import { CurrentUser } from "./decorators/current-user.decorator";
@@ -44,6 +46,7 @@ export class UsersController {
   }
 
   @Post("/signout")
+  @UseGuards(AuthGuard)
   signOut(@Session() session: any) {
     if (session.userId) {
       session.userId = null;
@@ -53,6 +56,7 @@ export class UsersController {
   }
 
   @Get("/whoami")
+  @UseGuards(AuthGuard)
   whoAmI(@CurrentUser() user: UserDto) {
     return user;
   }
