@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import { Serialize } from "../interceptors/serialize.interceptor";
 import { AuthService } from "./auth/auth.service";
+import { CurrentUser } from "./decorators/current-user.decorator";
 import { CreateUserDto } from "./dtos/create-user.dto";
 import { SignInUserDto } from "./dtos/signIn-user.dto";
 import { UpdateUserDto } from "./dtos/update-user.dto";
@@ -31,29 +32,29 @@ export class UsersController {
       body.email,
       body.password,
     );
-    session.UserId = user.id;
+    session.userId = user.id;
     return user;
   }
 
   @Post("/signin")
   async signIn(@Body() body: SignInUserDto, @Session() session: any) {
     const user = await this.authService.signIn(body.email, body.password);
-    session.UserId = user.id;
+    session.userId = user.id;
     return user;
   }
 
   @Post("/signout")
   signOut(@Session() session: any) {
-    if (session.UserId) {
-      session.UserId = null;
+    if (session.userId) {
+      session.userId = null;
       return "You are signed out";
     }
     return "You are not signed in";
   }
 
   @Get("/whoami")
-  whoAmI(@Session() session: any) {
-    return this.usersService.findOneById(session.UserId);
+  whoAmI(@CurrentUser() user: UserDto) {
+    return user;
   }
 
   @Get("/:id")
