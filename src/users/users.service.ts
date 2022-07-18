@@ -7,7 +7,7 @@ import { User } from "./user.entity";
 export class UsersService {
   constructor(@InjectRepository(User) private repository: Repository<User>) {}
 
-  async create(name: string, email: string, password: string) {
+  create(name: string, email: string, password: string) {
     const user = this.repository.create({
       name,
       email,
@@ -17,11 +17,18 @@ export class UsersService {
   }
 
   async findOneById(id: number) {
+    if (!id) {
+      return null;
+    }
     const user = await this.repository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException("User not found");
     }
     return user;
+  }
+
+  findOneByEmail(email: string) {
+    return this.repository.findOneBy({ email });
   }
 
   find() {
