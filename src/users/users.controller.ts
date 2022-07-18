@@ -42,7 +42,16 @@ export class UsersController {
     return user;
   }
 
-  @Get("/whoami ")
+  @Post("/signout")
+  signOut(@Session() session: any) {
+    if (session.UserId) {
+      session.UserId = null;
+      return "You are signed out";
+    }
+    return "You are not signed in";
+  }
+
+  @Get("/whoami")
   whoAmI(@Session() session: any) {
     return this.usersService.findOneById(session.UserId);
   }
