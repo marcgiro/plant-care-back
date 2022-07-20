@@ -83,4 +83,21 @@ describe("UsersController", () => {
     expect(signedInUser).toBeDefined();
     expect(signedInUser.id).toEqual(session.userId);
   });
+
+  it("the signOut method should set session userId to null and return 'You are signed out' ", () => {
+    const session = { userId: 1 };
+
+    const response = controller.signOut(session);
+
+    expect(response).toEqual("You are signed out");
+    expect(session.userId).toBeNull();
+  });
+
+  it("the signOut method should return 'You are not signed in' when the user tries to sign out when is not signed in", () => {
+    const session = { userId: null };
+
+    const response = controller.signOut(session);
+
+    expect(response).toEqual("You are not signed in");
+  });
 });
