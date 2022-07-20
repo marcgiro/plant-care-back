@@ -13,7 +13,13 @@ describe("UsersController", () => {
     const users: User[] = [];
     mockUsersService = {
       findOneByEmail: jest.fn(),
-      find: jest.fn(),
+      findOneById(id) {
+        const filteredUser = users.filter((user) => user.id === id);
+        return Promise.resolve(filteredUser[0]);
+      },
+      find() {
+        return Promise.resolve(users);
+      },
       remove: jest.fn(),
       update: jest.fn(),
     };
@@ -106,5 +112,41 @@ describe("UsersController", () => {
     const whoAmIUser = controller.whoAmI(user as User);
 
     expect(whoAmIUser).toEqual(user);
+  });
+
+  it("the findOneUser should return the user corresponding with the id given as a parameter", async () => {
+    const user = {
+      name: "firstUser",
+      email: "firstUser@gmail.com",
+      password: "password",
+    } as User;
+    const session = { userId: null };
+    const createdUser = await controller.createUser(user, session);
+    const foundUser = await controller.findOneUser(session.userId);
+
+    expect(foundUser).toEqual(createdUser);
+  });
+
+  it("the findAllUsers should return an array with all the users", async () => {
+    const users = [
+      {
+        name: "firstUser",
+        email: "firstUser@gmail.com",
+        password: "password",
+      },
+      {
+        name: "secondUser",
+        email: "secondUser@gmail.com",
+        password: "password",
+      },
+    ] as User[];
+    const session1 = { userId: null };
+    const session2 = { userId: null };
+
+    const createdUser1 = await controller.createUser(users[0], session1);
+    const createdUser2 = await controller.createUser(users[1], session2);
+    const foundUsers = await controller.findAllUsers();
+
+    expect(foundUsers).toEqual([createdUser1, createdUser2]);
   });
 });
