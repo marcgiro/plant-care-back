@@ -100,4 +100,11 @@ describe("UsersController", () => {
 
     expect(response).toEqual("You are not signed in");
   });
+
+  it("the whoAmI method should return the user signed in", () => {
+    const user = { id: 1, name: "firstUser", email: "firstUser@gmail.com" };
+    const whoAmIUser = controller.whoAmI(user as User);
+
+    expect(whoAmIUser).toEqual(user);
+  });
 });
