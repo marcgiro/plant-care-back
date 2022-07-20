@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { AuthService } from "./auth/auth.service";
+import { UpdateUserDto } from "./dtos/update-user.dto";
 import { User } from "./user.entity";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
@@ -10,21 +11,35 @@ describe("UsersController", () => {
   let mockAuthService: Partial<AuthService>;
 
   beforeEach(async () => {
-    const users: User[] = [];
+    let users: User[] = [];
     mockUsersService = {
-      findOneByEmail: jest.fn(),
-      findOneById(id) {
+      async findOneById(id) {
         const filteredUser = users.filter((user) => user.id === id);
-        return Promise.resolve(filteredUser[0]);
+        return filteredUser[0];
       },
-      find() {
-        return Promise.resolve(users);
+
+      async find() {
+        return users;
       },
-      remove: jest.fn(),
-      update: jest.fn(),
+
+      async remove(id) {
+        const user = this.findOneById(id);
+        users = users.filter((user) => user.id !== id);
+        return user;
+      },
+
+      async update(id, body) {
+        const user = await this.findOneById(id).then((foundUser: User) => {
+          return foundUser;
+        });
+
+        user.name = body.name;
+        console.log(user);
+        return await user;
+      },
     };
     mockAuthService = {
-      signUp(name: string, email: string, password: string) {
+      async signUp(name: string, email: string, password: string) {
         const user = {
           id: Math.floor(Math.random() * 99999),
           name,
@@ -32,13 +47,14 @@ describe("UsersController", () => {
           password,
         } as User;
         users.push(user);
-        return Promise.resolve(user);
+        return user;
       },
-      signIn(email: string, password: string) {
+
+      async signIn(email: string, password: string) {
         const filteredUser = users
           .filter((user) => user.email === email)
           .filter((user) => user.password === password);
-        if (filteredUser.length === 1) return Promise.resolve(filteredUser[0]);
+        if (filteredUser.length === 1) return filteredUser[0];
       },
     };
 
@@ -148,5 +164,39 @@ describe("UsersController", () => {
     const foundUsers = await controller.findAllUsers();
 
     expect(foundUsers).toEqual([createdUser1, createdUser2]);
+  });
+
+  it("the deleteUser method should remove the user specified and return it", async () => {
+    const user = {
+      name: "firstUser",
+      email: "firstUser@gmail.com",
+      password: "password",
+    } as User;
+    const session = { userId: null };
+    const createdUser = await controller.createUser(user, session);
+
+    const removedUser = await controller.deleteUser(session.userId);
+    const users = await controller.findAllUsers();
+
+    expect(createdUser).toEqual(removedUser);
+    expect(users).toEqual([]);
+  });
+
+  it("the updateUser method should update the user specified with the information of the body in the request", async () => {
+    const user = {
+      name: "firstUser",
+      email: "firstUser@gmail.com",
+      password: "password",
+    } as User;
+    const session = { userId: null };
+    await controller.createUser(user, session);
+
+    const requestBody = { name: "firstUserUpdatedName" } as UpdateUserDto;
+    const updatedUser = await controller.updateUser(
+      session.userId,
+      requestBody,
+    );
+
+    expect(updatedUser.name).toEqual(requestBody.name);
   });
 });
